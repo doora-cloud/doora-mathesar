@@ -4,12 +4,7 @@ services:
   app:
     image: mathesar/mathesar-prod:latest
     restart: always
-    entrypoint: ./run.sh
     environment:
-      MODE: PRODUCTION
-      DEBUG: false
-      DJANGO_ALLOW_ASYNC_UNSAFE: true
-      DJANGO_SETTINGS_MODULE: config.settings.production
       ALLOWED_HOSTS: "*"
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
