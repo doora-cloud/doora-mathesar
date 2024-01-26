@@ -7,7 +7,7 @@ services:
     environment:
       ALLOWED_HOSTS: "*"
       SECRET_KEY: ${SECRET_KEY}
-      DJANGO_DATABASE_URL: postgres://postgres:postgres@db:5432/${DB_NAME}
+      DJANGO_DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       MATHESAR_DATABASES: ${DATABASES_MANAGEMENT}
     volumes:
       - ${BASE_VOLUME}/mathesar/static:/code/static
@@ -21,6 +21,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    links:
+      - db:db
     healthcheck:
       test: curl -f http://localhost:8000
       interval: 10s
@@ -36,7 +38,7 @@ services:
           cpus: "0.1"
           memory: 16M
   db:
-    image: postgres:14-alpine
+    image: postgres:13-alpine
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
