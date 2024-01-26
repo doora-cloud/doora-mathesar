@@ -3,6 +3,7 @@ version: "3.9"
 services:
   app:
     image: mathesar/mathesar-prod:latest
+    restart: always
     entrypoint: ./run.sh
     environment:
       MODE: PRODUCTION
@@ -13,7 +14,6 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       MATHESAR_DATABASES: ${DATABASES_MANAGEMENT}
-      DJANGO_SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
     volumes:
       - ${BASE_VOLUME}/mathesar/static:/code/static
       - ${BASE_VOLUME}/mathesar/media:/code/media
