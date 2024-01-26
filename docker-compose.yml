@@ -96,8 +96,8 @@ services:
           memory: 16M
 
 networks:
-  - internal:
-  - nginx:
-      external: true
-  - database:
-      external: true
+  internal:
+  nginx:
+    external: true
+  database:
+    external: true
