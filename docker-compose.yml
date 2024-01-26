@@ -6,6 +6,9 @@ services:
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME:-http://localhost}
       HTTP_PORT: 9000
+    networks:
+      - internal
+      - nginx
     expose:
       - 9000
     volumes:
@@ -43,6 +46,9 @@ services:
     volumes:
       - ${BASE_VOLUME}/mathesar/static:/code/static
       - ${BASE_VOLUME}/mathesar/media:/code/media
+    networks:
+      - internal
+      - database
     expose:
       - "8000"
     depends_on:
