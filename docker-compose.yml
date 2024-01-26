@@ -1,0 +1,97 @@
+version: "3.9"
+
+services:
+  proxy:
+    image: mathesar/mathesar-caddy:latest
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME:-http://localhost}
+      HTTP_PORT: 9000
+    expose:
+      - 9000
+    volumes:
+      - ${BASE_VOLUME}/mathesar/media:/mathesar/media
+      - ${BASE_VOLUME}/mathesar/static:/mathesar/static
+      - ${BASE_VOLUME}/caddy/data:/data
+      - ${BASE_VOLUME}/caddy/config:/config
+    healthcheck:
+      test: curl -f http://localhost:9000
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: ${LIMIT_PROXY_CPU:-1}
+          memory: ${LIMIT_PROXY_RAM:-256M}
+        reservations:
+          cpus: "0.1"
+          memory: 16M
+  app:
+    image: mathesar/mathesar-prod:latest
+    entrypoint: ./run.sh
+    environment:
+      MODE: PRODUCTION
+      DEBUG: false
+      DJANGO_ALLOW_ASYNC_UNSAFE: true
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      ALLOWED_HOSTS: "*"
+      SECRET_KEY: ${SECRET_KEY}
+      DJANGO_DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      MATHESAR_DATABASES: ${DATABASES_MANAGEMENT}
+      DJANGO_SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+    volumes:
+      - ${BASE_VOLUME}/mathesar/static:/code/static
+      - ${BASE_VOLUME}/mathesar/media:/code/media
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:8000
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: ${LIMIT_APP_CPU:-1}
+          memory: ${LIMIT_APP_RAM:-256M}
+        reservations:
+          cpus: "0.1"
+          memory: 16M
+  db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    expose:
+      - 5432
+    volumes:
+      - ${BASE_VOLUME}/postgresql:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: ${LIMIT_DB_CPU:-1}
+          memory: ${LIMIT_DB_RAM:-256M}
+        reservations:
+          cpus: "0.1"
+          memory: 16M
+
+networks:
+  - internal:
+  - nginx:
+      external: true
+  - database:
+      external: true
