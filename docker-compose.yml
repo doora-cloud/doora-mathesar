@@ -14,7 +14,7 @@ services:
       - ${BASE_VOLUME}/mathesar/media:/code/media
     networks:
       - internal
-      - database
+      - db-management
       - nginx
     expose:
       - "8000"
@@ -63,10 +63,33 @@ services:
         reservations:
           cpus: "0.1"
           memory: 16M
+  db-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    restart: always
+    environment:
+      DATA_SOURCE_NAME: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
+    expose:
+      - 9187
+    networks:
+      - internal
+      - monitoring
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: ${LIMIT_CPU_DB_EXPORTER:-0.2}
+          memory: ${LIMIT_RAM_DB_EXPORTER:-128M}
+        reservations:
+          cpus: "0.1"
+          memory: 10M
 
 networks:
   internal:
   nginx:
     external: true
-  database:
+  db-management:
+    external: true
+  monitoring:
     external: true
